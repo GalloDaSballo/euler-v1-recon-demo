@@ -21,4 +21,10 @@ abstract contract BeforeAfter is Setup {
     function __after() internal {
         _after.isLiquidatable = riskManager.isLiquidatable(address(this));
     }
+
+    modifier withChecks {
+        __before();
+        _;
+        __after();
+    }
 }
