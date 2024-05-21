@@ -7,10 +7,3 @@ remappings = [
     '@chimera/=lib/chimera/src/'
 ]
 solc_version = "0.8.10"
-
-[fuzz]
-runs = 1
-
-
-[invariant]
-runs = 1000

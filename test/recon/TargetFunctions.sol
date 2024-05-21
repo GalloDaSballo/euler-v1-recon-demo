@@ -12,71 +12,78 @@ import "src/modules/EToken.sol";
 
 abstract contract TargetFunctions is BaseTargetFunctions, Properties, BeforeAfter {
 
+  function crytic_solvent() public returns (bool) {
+    if(!_before.isLiquidatable) {
+      return _after.isLiquidatable == false;
+    }
+    return true;
+  }
+
     function eToken_approve(address spender, uint256 amount) public {
-      EToken(address(singleton)).approve(spender, amount);
+      eToken.approve(spender, amount);
     }
 
-    function eToken_approveSubAccount(uint256 subAccountId, address spender, uint256 amount) public {
-      EToken(address(singleton)).approveSubAccount(subAccountId, spender, amount);
+    function eToken_approveSubAccount( address spender, uint256 amount) public {
+      eToken.approveSubAccount(subAccountId, spender, amount);
     }
 
-    function eToken_burn(uint256 subAccountId, uint256 amount) public {
-      EToken(address(singleton)).burn(subAccountId, amount);
+    function eToken_burn( uint256 amount) public {
+      eToken.burn(subAccountId, amount);
     }
 
-    function eToken_deposit(uint256 subAccountId, uint256 amount) public {
-      EToken(address(singleton)).deposit(subAccountId, amount);
+    function eToken_deposit( uint256 amount) public {
+      eToken.deposit(subAccountId, amount);
     }
 
-    function eToken_donateToReserves(uint256 subAccountId, uint256 amount) public {
-      EToken(address(singleton)).donateToReserves(subAccountId, amount);
+    function eToken_donateToReserves( uint256 amount) public {
+      eToken.donateToReserves(subAccountId, amount);
     }
 
-    function eToken_mint(uint256 subAccountId, uint256 amount) public {
-      EToken(address(singleton)).mint(subAccountId, amount);
+    function eToken_mint( uint256 amount) public {
+      eToken.mint(subAccountId, amount);
     }
 
     function eToken_touch() public {
-      EToken(address(singleton)).touch();
+      eToken.touch();
     }
 
     function eToken_transfer(address to, uint256 amount) public {
-      EToken(address(singleton)).transfer(to, amount);
+      eToken.transfer(to, amount);
     }
 
     function eToken_transferFrom(address from, address to, uint256 amount) public {
-      EToken(address(singleton)).transferFrom(from, to, amount);
+      eToken.transferFrom(from, to, amount);
     }
 
     function eToken_transferFromMax(address from, address to) public {
-      EToken(address(singleton)).transferFromMax(from, to);
+      eToken.transferFromMax(from, to);
     }
 
-    function eToken_withdraw(uint256 subAccountId, uint256 amount) public {
-      EToken(address(singleton)).withdraw(subAccountId, amount);
+    function eToken_withdraw( uint256 amount) public {
+      eToken.withdraw(subAccountId, amount);
     }
 
-    function dToken_approveDebt(uint256 subAccountId, address spender, uint256 amount) public {
-      DToken(address(singleton)).approveDebt(subAccountId, spender, amount);
+    function dToken_approveDebt( address spender, uint256 amount) public {
+      dToken.approveDebt(subAccountId, spender, amount);
     }
 
-    function dToken_borrow(uint256 subAccountId, uint256 amount) public {
-      DToken(address(singleton)).borrow(subAccountId, amount);
+    function dToken_borrow( uint256 amount) public {
+      dToken.borrow(subAccountId, amount);
     }
 
     function dToken_flashLoan(uint256 amount, bytes calldata data) public {
-      DToken(address(singleton)).flashLoan(amount, data);
+      dToken.flashLoan(amount, data);
     }
 
-    function dToken_repay(uint256 subAccountId, uint256 amount) public {
-      DToken(address(singleton)).repay(subAccountId, amount);
+    function dToken_repay( uint256 amount) public {
+      dToken.repay(subAccountId, amount);
     }
 
     function dToken_transfer(address to, uint256 amount) public {
-      DToken(address(singleton)).transfer(to, amount);
+      dToken.transfer(to, amount);
     }
 
     function dToken_transferFrom(address from, address to, uint256 amount) public {
-      DToken(address(singleton)).transferFrom(from, to, amount);
+      dToken.transferFrom(address(this), to, amount);
     }
 }

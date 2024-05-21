@@ -7,12 +7,16 @@ import "./Storage.sol";
 import "./Events.sol";
 import "./Proxy.sol";
 
+import {console2} from "forge-std/console2.sol";
+
 abstract contract Base is Storage, Events {
     // Modules
 
     function _createProxy(uint proxyModuleId) internal returns (address) {
         require(proxyModuleId != 0, "e/create-proxy/invalid-module");
         require(proxyModuleId <= MAX_EXTERNAL_MODULEID, "e/create-proxy/internal-module");
+
+        console2.log("_createProxy");
 
         // If we've already created a proxy for a single-proxy module, just return it:
 
@@ -21,12 +25,15 @@ abstract contract Base is Storage, Events {
         // Otherwise create a proxy:
 
         address proxyAddr = address(new Proxy());
+        console2.log("proxyAddr", proxyAddr);
 
         if (proxyModuleId <= MAX_EXTERNAL_SINGLE_PROXY_MODULEID) proxyLookup[proxyModuleId] = proxyAddr;
 
         trustedSenders[proxyAddr] = TrustedSenderInfo({ moduleId: uint32(proxyModuleId), moduleImpl: address(0) });
 
         emit ProxyCreated(proxyAddr, proxyModuleId);
+
+        console2.log("ProxyCreated");
 
         return proxyAddr;
     }

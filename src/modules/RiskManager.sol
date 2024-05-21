@@ -301,6 +301,11 @@ contract RiskManager is IRiskManager, BaseLogic {
         }
     }
 
+    function isLiquidatable(address account) public view returns (bool) {
+        LiquidityStatus memory res = computeLiquidityRaw(account, getEnteredMarketsArray(account));
+        return res.liabilityValue > res.collateralValue;
+    }
+
     function computeLiquidity(address account) public view override returns (LiquidityStatus memory) {
         return computeLiquidityRaw(account, getEnteredMarketsArray(account));
     }
