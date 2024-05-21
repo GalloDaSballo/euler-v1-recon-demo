@@ -85,9 +85,9 @@ abstract contract Setup is BaseSetup {
         singleton = new Euler(admin, address(installer));
 
         mockFeedbase = new MockClFeed();
-        mockFeedbase.setAnswer(int256(1e8));
+        mockFeedbase.setAnswer(int256(1e36));
         mockFeedBorrow = new MockClFeed();
-        mockFeedBorrow.setAnswer(int256(1e8));
+        mockFeedBorrow.setAnswer(int256(1e36));
 
         address[] memory toInstall = new address[](9);
         toInstall[0] = address(dToken);
@@ -173,5 +173,8 @@ abstract contract Setup is BaseSetup {
         vm.prank(someoneElse);
         EToken(markets.underlyingToEToken(address(borrowToken))).deposit(0, 100_000e18);
         console2.log("Setup Successful");
+
+        exec = Exec(address(singleton.moduleIdToProxy(exec.moduleId())));
+        // liquidation = Liquidation(address(singleton.moduleIdToProxy(liquidation.moduleId())));
     }
 }

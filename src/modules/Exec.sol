@@ -57,6 +57,13 @@ contract Exec is BaseLogic {
         (assets) = abi.decode(result, (IRiskManager.AssetLiquidity[]));
     }
 
+    function isLiquidatable(address account) public staticDelegate returns (bool) {
+        bytes memory result = callInternalModule(MODULEID__RISK_MANAGER,
+                                                 abi.encodeWithSignature("checkLiquidatable(address)", account));
+
+        return abi.decode(result, (bool));
+    }
+
     /// @notice Retrieve Euler's view of an asset's price
     /// @param underlying Token address
     /// @return twap Time-weighted average price

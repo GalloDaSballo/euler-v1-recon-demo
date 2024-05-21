@@ -50,7 +50,7 @@ contract RiskManager is IRiskManager, BaseLogic {
 
     function getNewMarketParameters(address underlying) external override returns (NewMarketParameters memory p) {
         p.config.borrowIsolated = true;
-        p.config.collateralFactor = uint32(0);
+        p.config.collateralFactor = uint32(95 * 4_000_000_000 / 100); /// new market with 95% borrow factor
         p.config.borrowFactor = type(uint32).max;
         p.config.twapWindow = type(uint24).max;
 
@@ -140,17 +140,19 @@ contract RiskManager is IRiskManager, BaseLogic {
         // the latestAnswer call should be replaced by latestRoundData and updatedTime should be checked 
         // to detect staleness of the oracle
         (bool success, bytes memory data) = chainlinkAggregator.staticcall(abi.encodeWithSelector(IChainlinkAggregatorV2V3.latestAnswer.selector));
-
+        console2.log("CL SUCCESS", success);
         if (!success) {
             return 0;
         }
 
         int256 answer = abi.decode(data, (int256));
+        console2.log("CL answer", answer);
         if (answer <= 0) {
             return 0;
         }
 
         price = uint(answer);
+        
         if (price > 1e36) price = 1e36;
     }
 
@@ -264,6 +266,7 @@ contract RiskManager is IRiskManager, BaseLogic {
             if (owed != 0) {
                 initAssetCache(underlying, assetStorage, assetCache);
                 (uint price,) = getPriceInternal(assetCache, config);
+                console2.log("asset coll", price);
 
                 console2.log("isLiquidatable 5");
 
@@ -289,6 +292,7 @@ contract RiskManager is IRiskManager, BaseLogic {
                         uint assetCollateral = (balanceInUnderlying - selfAmountAdjusted) * config.collateralFactor / CONFIG_FACTOR_SCALE;
                         assetCollateral += selfAmount;
                         status.collateralValue += assetCollateral * price / 1e18;
+                        console2.log("assetCollateral * price / 1e18", assetCollateral * price / 1e18);
                     }
 
                     assetLiability -= selfAmount;
@@ -315,7 +319,7 @@ contract RiskManager is IRiskManager, BaseLogic {
         }
     }
 
-    function isLiquidatable(address account) public view returns (bool) {
+    function checkLiquidatable(address account) public view  returns (bool) {
         console2.log("isLiquidatable 0");
         LiquidityStatus memory res = computeLiquidityRaw(account, getEnteredMarketsArray(account));
         return res.liabilityValue > res.collateralValue;
@@ -342,7 +346,8 @@ contract RiskManager is IRiskManager, BaseLogic {
 
     function requireLiquidity(address account) external view override {
         LiquidityStatus memory status = computeLiquidity(account);
-
+        console2.log("status.collateralValue", status.collateralValue);
+        console2.log("status.liabilityValue", status.liabilityValue);
         require(!status.borrowIsolated || status.numBorrows == 1, "e/borrow-isolation-violation");
         require(status.collateralValue >= status.liabilityValue, "e/collateral-violation");
     }
