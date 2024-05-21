@@ -38,10 +38,11 @@ contract RiskManager is IRiskManager, BaseLogic {
         bytes32 uniswapPoolInitCodeHash;
     }
 
-    constructor(bytes32 moduleGitCommit_, RiskManagerSettings memory settings) BaseLogic(MODULEID__RISK_MANAGER, moduleGitCommit_) {
-        referenceAsset = settings.referenceAsset;
-        uniswapFactory = settings.uniswapFactory;
-        uniswapPoolInitCodeHash = settings.uniswapPoolInitCodeHash;
+    /// NOTE: Removed UnIV3 stuff
+    constructor(bytes32 moduleGitCommit_) BaseLogic(MODULEID__RISK_MANAGER, moduleGitCommit_) {
+        referenceAsset = address(2);
+        uniswapFactory = address(1);
+        uniswapPoolInitCodeHash = bytes32(uint256(0));
     }
 
 
@@ -53,60 +54,9 @@ contract RiskManager is IRiskManager, BaseLogic {
         p.config.borrowFactor = type(uint32).max;
         p.config.twapWindow = type(uint24).max;
 
-        if (underlying == referenceAsset) {
-            // 1:1 peg
+        require(chainlinkPriceFeedLookup[underlying] != address(0), "Need CL to be set!");
 
-            p.pricingType = PRICINGTYPE__PEGGED;
-            p.pricingParameters = uint32(0);
-        } else if (pTokenLookup[underlying] != address(0)) {
-            p.pricingType = PRICINGTYPE__FORWARDED;
-            p.pricingParameters = uint32(0);
-
-            p.config.collateralFactor = underlyingLookup[pTokenLookup[underlying]].collateralFactor;
-        } else {
-            // Uniswap3 TWAP
-
-            // The uniswap pool (fee-level) with the highest in-range liquidity is used by default.
-            // This is a heuristic and can easily be manipulated by the activator, so users should
-            // verify the selection is suitable before using the pool. Otherwise, governance will
-            // need to change the pricing config for the market.
-
-            address pool = address(0);
-            uint24 fee = 0;
-
-            {
-                uint24[4] memory fees = [uint24(3000), 10000, 500, 100];
-                uint128 bestLiquidity = 0;
-
-                for (uint i = 0; i < fees.length; ++i) {
-                    address candidatePool = IUniswapV3Factory(uniswapFactory).getPool(underlying, referenceAsset, fees[i]);
-                    if (candidatePool == address(0)) continue;
-
-                    uint128 liquidity = IUniswapV3Pool(candidatePool).liquidity();
-
-                    if (pool == address(0) || liquidity > bestLiquidity) {
-                        pool = candidatePool;
-                        fee = fees[i];
-                        bestLiquidity = liquidity;
-                    }
-                }
-            }
-
-            require(pool != address(0), "e/no-uniswap-pool-avail");
-            require(computeUniswapPoolAddress(underlying, fee) == pool, "e/bad-uniswap-pool-addr");
-
-            p.pricingType = PRICINGTYPE__UNISWAP3_TWAP;
-            p.pricingParameters = uint32(fee);
-
-            try IUniswapV3Pool(pool).increaseObservationCardinalityNext(MIN_UNISWAP3_OBSERVATION_CARDINALITY) {
-                // Success
-            } catch Error(string memory err) {
-                if (keccak256(bytes(err)) == keccak256("LOK")) revert("e/risk/uniswap-pool-not-inited");
-                revert(string(abi.encodePacked("e/risk/uniswap/", err)));
-            } catch (bytes memory returnData) {
-                revertBytes(returnData);
-            }
-        }
+        p.pricingType = PRICINGTYPE__CHAINLINK;
     }
 
 
@@ -286,7 +236,6 @@ contract RiskManager is IRiskManager, BaseLogic {
 
 
     // Liquidity
-
     function computeLiquidityRaw(address account, address[] memory underlyings) private view returns (LiquidityStatus memory status) {
         status.collateralValue = 0;
         status.liabilityValue = 0;

@@ -109,7 +109,7 @@ contract Governance is BaseLogic {
 
     function setChainlinkPriceFeed(address underlying, address chainlinkAggregator) external nonReentrant governorOnly {
         address eTokenAddr = underlyingLookup[underlying].eTokenAddress;
-        require(eTokenAddr != address(0), "e/gov/underlying-not-activated");
+        // require(eTokenAddr != address(0), "e/gov/underlying-not-activated"); /// @audit We skip this config so we can quickly setup a market with CL
         require(chainlinkAggregator != address(0), "e/gov/bad-chainlink-address");
 
         chainlinkPriceFeedLookup[underlying] = chainlinkAggregator;
