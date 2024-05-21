@@ -26,6 +26,9 @@ import "src/test/TestERC20.sol";
 // IRM
 import "src/modules/interest-rate-models/test/IRMFixed.sol";
 
+import {vm} from "@chimera/Hevm.sol";
+import {console2} from "forge-std/console2.sol";
+
 contract MockClFeed {
     int256 public latestAnswer;
 
@@ -149,13 +152,26 @@ abstract contract Setup is BaseSetup {
 
         eToken = EToken(markets.underlyingToEToken(address(baseToken)));
 
-        riskManager =  RiskManager(address(singleton.moduleIdToProxy(riskManager.moduleId())));
+        console2.log("riskManager", address(riskManager));
+        // riskManager =  RiskManager(address(singleton.moduleIdToProxy(riskManager.moduleId())));
+        console2.log("riskManager", address(riskManager));
 
         markets.enterMarket(subAccountId, address(baseToken));
         markets.enterMarket(subAccountId, address(borrowToken));
 
         // Seed some on a different account
+        address someoneElse = address(0x1231231);
+
+        vm.prank(someoneElse);
         markets.enterMarket(0, address(borrowToken));
+
+        borrowToken.mint(someoneElse, 100_000e18);
+
+        vm.prank(someoneElse);
+        borrowToken.approve(address(singleton), type(uint256).max);
+        
+        vm.prank(someoneElse);
         EToken(markets.underlyingToEToken(address(borrowToken))).deposit(0, 100_000e18);
+        console2.log("Setup Successful");
     }
 }

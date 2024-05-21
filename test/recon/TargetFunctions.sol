@@ -18,6 +18,13 @@ abstract contract TargetFunctions is BaseTargetFunctions, Properties, BeforeAfte
     }
     return true;
   }
+  function crytic_canary() public returns (bool) {
+    return riskManager.isLiquidatable(address(this)) == false;
+  }
+
+  function borrow_price_change(uint256 newPrice) public {
+    mockFeedBorrow.setAnswer(int256(newPrice));
+  }
 
     function eToken_approve(address spender, uint256 amount) public withChecks {
       eToken.approve(spender, amount);

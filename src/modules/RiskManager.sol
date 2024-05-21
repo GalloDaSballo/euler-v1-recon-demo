@@ -7,7 +7,7 @@ import "../IRiskManager.sol";
 import "../vendor/TickMath.sol";
 import "../vendor/FullMath.sol";
 
-
+import {console2} from "forge-std/console2.sol";
 
 interface IUniswapV3Factory {
     function getPool(address tokenA, address tokenB, uint24 fee) external view returns (address pool);
@@ -242,6 +242,8 @@ contract RiskManager is IRiskManager, BaseLogic {
         status.numBorrows = 0;
         status.borrowIsolated = false;
 
+        console2.log("isLiquidatable 1");
+
         AssetConfig memory config;
         AssetStorage storage assetStorage;
         AssetCache memory assetCache;
@@ -249,23 +251,31 @@ contract RiskManager is IRiskManager, BaseLogic {
         for (uint i = 0; i < underlyings.length; ++i) {
             address underlying = underlyings[i];
 
+            console2.log("isLiquidatable 2");
             config = resolveAssetConfig(underlying);
             assetStorage = eTokenLookup[config.eTokenAddress];
+
+            console2.log("isLiquidatable 3");
 
             uint balance = assetStorage.users[account].balance;
             uint owed = assetStorage.users[account].owed;
 
+            console2.log("isLiquidatable 4");
             if (owed != 0) {
                 initAssetCache(underlying, assetStorage, assetCache);
                 (uint price,) = getPriceInternal(assetCache, config);
+
+                console2.log("isLiquidatable 5");
 
                 status.numBorrows++;
                 if (config.borrowIsolated) status.borrowIsolated = true;
 
                 uint assetLiability = getCurrentOwed(assetStorage, assetCache, account);
+                console2.log("isLiquidatable 6");
 
                 if (balance != 0) { // self-collateralisation
                     uint balanceInUnderlying = balanceToUnderlyingAmount(assetCache, balance);
+                    console2.log("isLiquidatable 7");
 
                     uint selfAmount = assetLiability;
                     uint selfAmountAdjusted = assetLiability * CONFIG_FACTOR_SCALE / SELF_COLLATERAL_FACTOR;
@@ -290,18 +300,23 @@ contract RiskManager is IRiskManager, BaseLogic {
                 assetLiability = config.borrowFactor != 0 ? assetLiability * CONFIG_FACTOR_SCALE / config.borrowFactor : MAX_SANE_DEBT_AMOUNT;
                 status.liabilityValue += assetLiability;
             } else if (balance != 0 && config.collateralFactor != 0) {
+                console2.log("isLiquidatable 8");
                 initAssetCache(underlying, assetStorage, assetCache);
                 (uint price,) = getPriceInternal(assetCache, config);
+                console2.log("isLiquidatable 9");
 
                 uint balanceInUnderlying = balanceToUnderlyingAmount(assetCache, balance);
+                console2.log("isLiquidatable 10");
                 uint assetCollateral = balanceInUnderlying * price / 1e18;
                 assetCollateral = assetCollateral * config.collateralFactor / CONFIG_FACTOR_SCALE;
                 status.collateralValue += assetCollateral;
             }
+            console2.log("isLiquidatable 11");
         }
     }
 
     function isLiquidatable(address account) public view returns (bool) {
+        console2.log("isLiquidatable 0");
         LiquidityStatus memory res = computeLiquidityRaw(account, getEnteredMarketsArray(account));
         return res.liabilityValue > res.collateralValue;
     }

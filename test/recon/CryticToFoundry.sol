@@ -11,7 +11,8 @@ contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
     function setUp() public {
         setup();
     }
-
+    
+    //  forge test --match-test testDemo -vv
     function testDemo() public {
         // TODO: Given any target function and foundry assert, test your results
         eToken_deposit(1e18);
