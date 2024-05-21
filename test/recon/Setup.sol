@@ -60,9 +60,13 @@ abstract contract Setup is BaseSetup {
 
     uint256 subAccountId = 1;
 
+    IRMFixed mockIRM;
+
     function setup() internal virtual override {
         // Modules
         installer = new Installer(bytes32(uint256(0x1)));
+
+        mockIRM = new IRMFixed(bytes32(uint256(0x1)));
 
         
         dToken = new DToken(bytes32(uint256(0x1)));
@@ -82,7 +86,7 @@ abstract contract Setup is BaseSetup {
         mockFeedBorrow = new MockClFeed();
         mockFeedBorrow.setAnswer(int256(1e8));
 
-        address[] memory toInstall = new address[](8);
+        address[] memory toInstall = new address[](9);
         toInstall[0] = address(dToken);
         dToken.moduleId();
         dToken.moduleGitCommit();
@@ -94,6 +98,8 @@ abstract contract Setup is BaseSetup {
         toInstall[6] = address(riskManager);
         // toInstall[7] = address(swap);
         toInstall[7] = address(swapHub);
+
+        toInstall[8] = address(mockIRM);
 
 
         // NOTE: Pretty sure this is wrong
@@ -117,10 +123,16 @@ abstract contract Setup is BaseSetup {
         gov.setChainlinkPriceFeed(address(borrowToken), address(mockFeedBorrow));
 
 
+
         // Create a market
         Markets(address(singleton.moduleIdToProxy(markets.moduleId()))).activateMarket(address(baseToken));
         Markets(address(singleton.moduleIdToProxy(markets.moduleId()))).activateMarket(address(borrowToken));
         
+        markets = Markets(address(singleton.moduleIdToProxy(markets.moduleId())));
+
+        // SET IRM
+        gov.setIRM(address(baseToken), (mockIRM.moduleId()), hex"");
+        gov.setIRM(address(borrowToken), (mockIRM.moduleId()), hex"");
 
         // Then check for more coverage
         // SEtup the tokens ??
@@ -130,9 +142,20 @@ abstract contract Setup is BaseSetup {
         // donateToReserves
         // isLiquidatable
 
-        dToken = DToken(address(singleton.moduleIdToProxy(dToken.moduleId())));
-        eToken = EToken(address(singleton.moduleIdToProxy(eToken.moduleId())));
+        // TODO: WRONG need to be set to the ones for the specific market
+        dToken = DToken(markets.underlyingToDToken(address(borrowToken)));
+
+       
+
+        eToken = EToken(markets.underlyingToEToken(address(baseToken)));
 
         riskManager =  RiskManager(address(singleton.moduleIdToProxy(riskManager.moduleId())));
+
+        markets.enterMarket(subAccountId, address(baseToken));
+        markets.enterMarket(subAccountId, address(borrowToken));
+
+        // Seed some on a different account
+        markets.enterMarket(0, address(borrowToken));
+        EToken(markets.underlyingToEToken(address(borrowToken))).deposit(0, 100_000e18);
     }
 }

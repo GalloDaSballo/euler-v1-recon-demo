@@ -14,5 +14,7 @@ contract CryticToFoundry is Test, TargetFunctions, FoundryAsserts {
 
     function testDemo() public {
         // TODO: Given any target function and foundry assert, test your results
+        eToken_deposit(1e18);
+        dToken_borrow(1000);
     }
 }

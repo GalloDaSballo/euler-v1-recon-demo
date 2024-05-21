@@ -31,26 +31,19 @@ contract Installer is BaseModule {
     }
 
     function installModules(address[] memory moduleAddrs) external nonReentrant adminOnly {
-        console2.log("installModules 0");
         for (uint i = 0; i < moduleAddrs.length; ++i) {
             address moduleAddr = moduleAddrs[i];
             uint newModuleId = BaseModule(moduleAddr).moduleId();
             bytes32 moduleGitCommit = BaseModule(moduleAddr).moduleGitCommit();
 
             moduleLookup[newModuleId] = moduleAddr;
-            console2.log("installModules");
 
             if (newModuleId <= MAX_EXTERNAL_SINGLE_PROXY_MODULEID) {
-                console2.log("wtf");
-                console2.log("newModuleId", newModuleId);
                 address proxyAddr = _createProxy(newModuleId);
-                console2.log("proxyAddr in install");
                 trustedSenders[proxyAddr].moduleImpl = moduleAddr;
-                console2.log("set some storage");
             }
 
             emit InstallerInstallModule(newModuleId, moduleAddr, moduleGitCommit);
-            console2.log("InstallerInstallModule");
         }
     }
 }
