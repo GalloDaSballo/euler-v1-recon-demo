@@ -1,15 +1,15 @@
-/euler-addresses.json
-/euler-addresses-*.json
-/node_modules/
-/artifacts/
-/cache/
-/.idea/
-/coverage.json
-/coverage/
-.DS_Store
+# Compiler files
+cache/
+out/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Dotenv file
 .env
-.env.*
-notes.txt
-detect-permit-errors.log
-accountsAtRiskOfViolation.json
-accountsInViolation.json
+
+# Medusa
+/crytic-export
+/medusa
