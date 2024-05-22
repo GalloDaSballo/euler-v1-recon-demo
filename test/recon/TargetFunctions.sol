@@ -12,16 +12,18 @@ import "src/modules/EToken.sol";
 
 abstract contract TargetFunctions is BaseTargetFunctions, Properties, BeforeAfter {
 
-  function crytic_solvent() public returns (bool) {
+  function check_solvent() public returns (bool) {
     if(!_before.isLiquidatable) {
-      return _after.isLiquidatable == false;
+      t(_after.isLiquidatable == false, "Must not change");
     }
     return true;
   }
-  function crytic_canary() public returns (bool) {
+  function check_canary() public returns (bool) {
+    t(exec.isLiquidatable(address(this)) == false, "Must not be liq");
     return exec.isLiquidatable(address(this)) == false;
   }
 
+  /// !IMPORTANT No before after here as otherwise we could change the price and cause liquidations
   function borrow_price_change(uint256 newPrice) public {
     mockFeedBorrow.setAnswer(int256(newPrice));
   }
@@ -29,6 +31,7 @@ abstract contract TargetFunctions is BaseTargetFunctions, Properties, BeforeAfte
     mockFeedbase.setAnswer(int256(newPrice));
   }
 
+  /// NOTE: `withChecks` form here onwards
     function eToken_approve(address spender, uint256 amount) public withChecks {
       eToken.approve(spender, amount);
     }
