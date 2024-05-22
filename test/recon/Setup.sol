@@ -61,7 +61,7 @@ abstract contract Setup is BaseSetup {
     TestERC20 baseToken;
     TestERC20 borrowToken;
 
-    uint256 subAccountId = 1;
+    uint256 subAccountId = 0;
 
     IRMFixed mockIRM;
 
@@ -85,9 +85,9 @@ abstract contract Setup is BaseSetup {
         singleton = new Euler(admin, address(installer));
 
         mockFeedbase = new MockClFeed();
-        mockFeedbase.setAnswer(int256(1e36));
+        mockFeedbase.setAnswer(int256(1e18));
         mockFeedBorrow = new MockClFeed();
-        mockFeedBorrow.setAnswer(int256(1e36));
+        mockFeedBorrow.setAnswer(int256(1e18));
 
         address[] memory toInstall = new address[](9);
         toInstall[0] = address(dToken);
@@ -163,18 +163,21 @@ abstract contract Setup is BaseSetup {
         address someoneElse = address(0x1231231);
 
         vm.prank(someoneElse);
-        markets.enterMarket(0, address(borrowToken));
+        markets.enterMarket(1, address(borrowToken));
 
         borrowToken.mint(someoneElse, 100_000e18);
 
         vm.prank(someoneElse);
         borrowToken.approve(address(singleton), type(uint256).max);
         
+        
+        EToken temp = EToken(markets.underlyingToEToken(address(borrowToken)));
         vm.prank(someoneElse);
-        EToken(markets.underlyingToEToken(address(borrowToken))).deposit(0, 100_000e18);
+        temp.deposit(1, 100_000e18);
         console2.log("Setup Successful");
 
         exec = Exec(address(singleton.moduleIdToProxy(exec.moduleId())));
-        // liquidation = Liquidation(address(singleton.moduleIdToProxy(liquidation.moduleId())));
+        liquidation = Liquidation(address(singleton.moduleIdToProxy(liquidation.moduleId())));
+        liquidation = Liquidation(address(singleton.moduleIdToProxy(liquidation.moduleId())));
     }
 }

@@ -19,7 +19,6 @@ abstract contract TargetFunctions is BaseTargetFunctions, Properties, BeforeAfte
     return true;
   }
   function crytic_canary() public returns (bool) {
-    t(exec.isLiquidatable(address(this)) == false, "Must not be insolvent");
     return exec.isLiquidatable(address(this)) == false;
   }
 

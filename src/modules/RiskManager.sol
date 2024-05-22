@@ -274,7 +274,7 @@ contract RiskManager is IRiskManager, BaseLogic {
                 if (config.borrowIsolated) status.borrowIsolated = true;
 
                 uint assetLiability = getCurrentOwed(assetStorage, assetCache, account);
-                console2.log("isLiquidatable 6");
+                console2.log("isLiquidatable 6, ", assetLiability);
 
                 if (balance != 0) { // self-collateralisation
                     uint balanceInUnderlying = balanceToUnderlyingAmount(assetCache, balance);
@@ -301,8 +301,11 @@ contract RiskManager is IRiskManager, BaseLogic {
                 }
 
                 assetLiability = assetLiability * price / 1e18;
+                console2.log("isLiquidatable assetLiability 2", assetLiability);
                 assetLiability = config.borrowFactor != 0 ? assetLiability * CONFIG_FACTOR_SCALE / config.borrowFactor : MAX_SANE_DEBT_AMOUNT;
+                console2.log("isLiquidatable assetLiability 3", assetLiability);
                 status.liabilityValue += assetLiability;
+                console2.log("isLiquidatable liabilityValue 4", status.liabilityValue);
             } else if (balance != 0 && config.collateralFactor != 0) {
                 console2.log("isLiquidatable 8");
                 initAssetCache(underlying, assetStorage, assetCache);
@@ -322,6 +325,8 @@ contract RiskManager is IRiskManager, BaseLogic {
     function checkLiquidatable(address account) public view  returns (bool) {
         console2.log("isLiquidatable 0");
         LiquidityStatus memory res = computeLiquidityRaw(account, getEnteredMarketsArray(account));
+        console2.log("res.liabilityValue", res.liabilityValue);
+        console2.log("res.collateralValue", res.collateralValue);
         return res.liabilityValue > res.collateralValue;
     }
 
